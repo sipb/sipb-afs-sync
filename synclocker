@@ -1,0 +1,85 @@
+#!/bin/sh
+#
+# This script users synctree to copy the sipb cell copy of the sipb locker
+# to the athena cell copy
+#
+# based on the original script by Derek Atkins <warlord@mit.edu>
+# 
+# rewritten in sh to save us all by Garry Zacheiss <zacheiss@mit.edu>
+#
+# $Id$
+#
+# $Log$
+# Revision 1.1  2000/01/20 19:07:09  zacheiss
+# syncs the athena cell copy of the sipb locker with the sipb cell copy.
+#
+# Revision 1.4  1999/09/11 17:08:55  root
+# we don't want output of kdestroy, either.
+#
+# Revision 1.3  1999/09/11 17:06:54  root
+# need full paths to unlog & kdestroy; redirect output of vos release to /dev/null.
+#
+# Revision 1.2  1999/09/10 20:06:10  root
+# forgot a space in a test statement.
+#
+# Revision 1.1  1999/09/10 19:51:26  root
+# Initial revision
+#
+#
+
+# define some variables it might be neat to have
+KRB5CCNAME=/tmp/krb5cc_sync
+KRBTKFILE=/tmp/tkt_sync
+
+fromcell=sipb.mit.edu
+fromdir=project/sipb
+frompath=/afs/.${fromcell}/${fromdir}
+fromvol=`echo $fromdir | sed -e 's/\//\./'`
+
+tocell=athena.mit.edu
+todir=contrib/sipb
+topath=/afs/.${tocell}/${todir}
+
+errs=/tmp/syncerr.$$
+header=/tmp/syncheader.$$
+
+host=`/bin/hostname`
+mailto=sipb-afsreq@mit.edu
+mailrepl=sipb-afsreq@mit.edu
+
+synctree=/usr/athena/etc/synctree
+
+vos=/usr/afs/bin/vos
+
+# get tickets and authenticate to both cells
+/usr/athena/bin/kinit -k
+/bin/athena/aklog $tocell $fromcell
+
+# do the actual work
+$synctree -q -nosrcrules -nodstrules -s $frompath -d $topath -a $frompath/.rconf 2>&1 | \
+    egrep -v 'Parsing|Fixing|chown.*failed|chown|chmod' >>$errs
+
+# send mail if we've had any errors we care about
+if [ -s $errs ]; then
+    cat > $header <<EOF
+From: root@${host}
+To: $mailto
+Reply-To: $mailrepl
+Subject: $fromcell to $tocell synctree errors
+
+EOF
+
+    (cat $header; cat $errs) | /usr/lib/sendmail -t -f${mailrepl}
+else 
+    rm -f $errs
+fi
+
+# release the sipb cell volume 
+$vos release $fromvol -cell $fromcell -localauth >/dev/null 2>&1
+
+#clean up
+/bin/athena/unlog $fromcell $tocell
+/usr/athena/bin/kdestroy >/dev/null 2>&1
+ 
+exit 0
+
