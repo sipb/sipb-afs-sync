@@ -22,9 +22,9 @@ use constant AFS_REQUIRE_AUTH  => 2;
 $ENV{KRBTKFILE} = "/tmp/tkt_moirasync";
 $ENV{KRB5CCNAME} = "/tmp/krb5cc_moirasync";
 
-system("/usr/athena/bin/kinit -k")
+system("/usr/athena/bin/kinit -k") == 0
   or die("Unable to kinit");
-system("/bin/athena/aklog sipb.mit.edu")
+system("/bin/athena/aklog sipb.mit.edu") == 0
   or die("Unable to aklog");
 
 my $athena = AFS::PTS->new(AFS_NO_AUTH, "athena.mit.edu")
