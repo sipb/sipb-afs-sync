@@ -1,7 +1,17 @@
 #!/usr/bin/env perl
+#
+# Sync PTS lists listed in LIST:sipb-afs-sync between from the athena cell
+#
+# $Id$
+#
+# $Log $
+#
 use warnings;
 use strict;
 use Fatal qw(open);
+
+use lib '/var/local/AFS/blib/lib';
+use lib '/var/local/AFS/blib/arch/auto/AFS';
 
 use AFS::PTS;
 
@@ -9,13 +19,20 @@ use constant AFS_NO_AUTH       => 0;
 use constant AFS_OPTIONAL_AUTH => 1;
 use constant AFS_REQUIRE_AUTH  => 2;
 
+$ENV{KRBTKFILE} = "/tmp/tkt_moirasync";
+$ENV{KRB5CCNAME} = "/tmp/krb5cc_moirasync";
+
+system("/usr/athena/bin/kinit -k")
+  or die("Unable to kinit");
+system("/bin/athena/aklog sipb.mit.edu")
+  or die("Unable to aklog");
+
 my $athena = AFS::PTS->new(AFS_NO_AUTH, "athena.mit.edu")
   or die "Unable to authenticate to cell athena.mit.edu\n";
 my $sipb = AFS::PTS->new(AFS_REQUIRE_AUTH, "sipb.mit.edu")
   or die "Unable to authenticate to cell sipb.mit.edu\n";
 
-my $synclist = "/home/nelhage/mit/sipb/afs-moira/sync-list";
-my $blacklist = "/home/nelhage/mit/sipb/afs-moira/blacklist";
+my $blacklist = "/var/local/sync/moira-sync.exclude";
 
 sub read_list {
     my $list = shift;
@@ -76,7 +93,16 @@ sub looks_like_user {
     return $thing =~ m{^[\w\d_-]+(?:[.][\w\d_-]+)?$};
 }
 
-my @sync = read_list($synclist);
+my @sync;
+
+open(my $blanche, "-|", "/usr/athena/bin/blanche -noauth -l sipb-afs-sync");
+while(<$blanche>) {
+    chomp;
+    s/^LIST://;
+    push @sync, $_;
+}
+close($blanche);
+
 my %blacklist = map {$_=>1} read_list($blacklist);
 
 for my $list (@sync) {
@@ -139,3 +165,8 @@ for my $list (@sync) {
         }
     }
 }
+
+
+system("/usr/athena/bin/kdestroy >/dev/null 2>&1");
+system("/bin/athena/unlog sipb.mit.edu");
+
