@@ -14,6 +14,9 @@ use lib '/var/local/AFS/blib/lib';
 use lib '/var/local/AFS/blib/arch/auto/AFS';
 
 use AFS::PTS;
+use AFS;
+
+my $blanche = "/usr/athena/bin/blanche";
 
 use constant AFS_NO_AUTH       => 0;
 use constant AFS_OPTIONAL_AUTH => 1;
@@ -34,6 +37,8 @@ my $sipb = AFS::PTS->new(AFS_REQUIRE_AUTH, "sipb.mit.edu")
 
 my $blacklist = "/var/local/sync/moira-sync.exclude";
 
+my @errors;
+
 sub read_list {
     my $list = shift;
     open(my $fh, "<", $list);
@@ -53,9 +58,10 @@ sub create_list {
     my $list = shift;
     
     if(!$pts->listentry($list)) {
-        warn "Creating AFS group $list in -c sipb\n";
+        # warn "Creating AFS group $list in -c sipb\n";
         if(!$pts->creategroup($list, 'system:administrators')) {
-            warn "Unable to create list: $list -c sipb\n";
+            # warn "Unable to create list: $list -c sipb\n";
+            push @errors, "Unable to create list $list: $AFS::CODE";
             return;
         }
     }
@@ -69,19 +75,20 @@ sub create_user {
     my $id = shift;
     
     if(!$pts->listentry($user)) {
-        warn "Creating AFS user $user in -c sipb\n";
+        # warn "Creating AFS user $user in -c sipb\n";
         my $id = $oldpts->id($user);
         if(!$id) {
-            warn "User $user doesn't exists in Athena cell?!";
+            # warn "User $user doesn't exists in Athena cell?!";
             return;
         }
         if($pts->listentry($id)) {
-            warn "UID $id already exists in SIPB cell, not creating!";
+            # warn "UID $id already exists in SIPB cell, not creating!";
             return;
         }
         
         if(!$pts->createuser($user, $id)) {
-            warn "Unable to create user: $user -c sipb\n";
+            # warn "Unable to create user: $user -c sipb\n";
+	    push @errors, "Unable to create user $user: $AFS::CODE";
             return;
         }
     }
@@ -95,13 +102,13 @@ sub looks_like_user {
 
 my @sync;
 
-open(my $blanche, "-|", "/usr/athena/bin/blanche -noauth -l sipb-afs-sync");
-while(<$blanche>) {
+open(my $pipe, "-|", "$blanche -noauth -l sipb-afs-sync");
+while(<$pipe>) {
     chomp;
     s/^LIST://;
     push @sync, $_;
 }
-close($blanche);
+close($pipe);
 
 my %blacklist = map {$_=>1} read_list($blacklist);
 
@@ -112,12 +119,12 @@ for my $list (@sync) {
     my %athena;
     
     if($blacklist{$list}) {
-        warn "Skipping blacklisted $list\n";
+        # warn "Skipping blacklisted $list\n";
         next;
     }
     $afslist = "system:$list";
     if(!$athena->listentry($afslist)) {
-        warn "No such list: $list\n";
+        # warn "No such list: $list\n";
         next;
     }
     %athena = map {$_=>1} $athena->members($afslist);
@@ -128,42 +135,65 @@ for my $list (@sync) {
 
     for $member (keys %athena) {
         if(!looks_like_user($member)) {
-            warn "Skip non-user $member";
+            # warn "Skip non-user $member";
             next;
         }
         
         if(!$sipb{$member}) {
-            warn "Add $member to $list";
+            # warn "Add $member to $list";
         } else {
             next;
         }
 
         if(!create_user($sipb, $athena, $member)) {
-            warn "Unable to create user $member in -c sipb";
+            # warn "Unable to create user $member in -c sipb";
             next;
         }
 
         if(!$sipb->adduser($member, $afslist)) {
-            warn "Unable to add user $member to $list";
+            # warn "Unable to add user $member to $list";
+	    push @errors, "Unable to add user $member to $list: $AFS::CODE";
         }
     }
 
     for $member (keys %sipb) {
         if(!looks_like_user($member)) {
-            warn "Skip non-user $member";
+            # warn "Skip non-user $member";
             next;
         }
         
         if(!$athena{$member}) {
-            warn "Remove $member from $list\n";
+            # warn "Remove $member from $list\n";
         } else {
             next;
         }
         
         if(!$sipb->removeuser($member, $afslist)) {
-            warn "Unable to remove user $member from $list";
+            # warn "Unable to remove user $member from $list";
+	    push @errors, "Unable to remove $member from $list: $AFS::CODE";
         }
     }
+}
+
+my $mailto = 'sipb-afsreq@mit.edu';
+my $mailrepl = $mailto;
+my $host = `/bin/hostname`;
+my $sendmail = '/usr/lib/sendmail';
+
+if(@errors) {
+    open(my $mail, "|-", "$sendmail -t -f$mailrepl");
+    
+    print $mail <<ENDMAIL;
+From: root@$host
+To: $mailto
+Reply-To: $mailrepl
+Subject: sipb<->athena pts sync errors
+
+ENDMAIL
+    foreach my $e (@errors) {
+	print $mail "$e\n";
+    }
+    close($mail);
 }
 
 
