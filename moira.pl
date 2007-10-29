@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/athena/bin/perl
 #
 # Sync PTS lists listed in LIST:sipb-afs-sync between from the athena cell
 #
