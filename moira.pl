@@ -36,8 +36,15 @@ my $sipb = AFS::PTS->new(AFS_REQUIRE_AUTH, "sipb.mit.edu")
   or die "Unable to authenticate to cell sipb.mit.edu\n";
 
 my $blacklist = "/var/local/sync/moira-sync.exclude";
+my $logfile   = "/var/local/sync/moira-sync.log";
 
 my @errors;
+
+sub log_action {
+    open(my $log, ">>", $logfile);
+    print $log join("\t", time, @_), "\n";
+    close($log);
+}
 
 sub read_list {
     my $list = shift;
@@ -59,6 +66,7 @@ sub create_list {
     
     if(!$pts->listentry($list)) {
         # warn "Creating AFS group $list in -c sipb\n";
+        log_action('CREATE GROUP', $list);
         if(!$pts->creategroup($list, 'system:administrators')) {
             # warn "Unable to create list: $list -c sipb\n";
             push @errors, "Unable to create list $list: $AFS::CODE";
@@ -76,6 +84,7 @@ sub create_user {
     
     if(!$pts->listentry($user)) {
         # warn "Creating AFS user $user in -c sipb\n";
+        log_action('CREATE USER', $user);
         my $id = $oldpts->id($user);
         if(!$id) {
             # warn "User $user doesn't exists in Athena cell?!";
@@ -150,6 +159,7 @@ for my $list (@sync) {
             next;
         }
 
+	log_action('ADD USER', $member, $list);
         if(!$sipb->adduser($member, $afslist)) {
             # warn "Unable to add user $member to $list";
 	    push @errors, "Unable to add user $member to $list: $AFS::CODE";
@@ -167,6 +177,8 @@ for my $list (@sync) {
         } else {
             next;
         }
+	
+	log_action('REMOVE USER', $member, $list);
         
         if(!$sipb->removeuser($member, $afslist)) {
             # warn "Unable to remove user $member from $list";
