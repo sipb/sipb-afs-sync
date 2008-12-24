@@ -21,18 +21,19 @@ my $blanche = "/usr/athena/bin/blanche";
 use constant AFS_NO_AUTH       => 0;
 use constant AFS_OPTIONAL_AUTH => 1;
 use constant AFS_REQUIRE_AUTH  => 2;
+use constant AFS_ENCRYPT       => 3;
 
 $ENV{KRBTKFILE} = "/tmp/tkt_moirasync";
 $ENV{KRB5CCNAME} = "/tmp/krb5cc_moirasync";
 
 system("/usr/athena/bin/kinit -k") == 0
   or die("Unable to kinit");
-system("/bin/athena/aklog sipb.mit.edu") == 0
+system("/bin/athena/aklog athena.mit.edu sipb.mit.edu") == 0
   or die("Unable to aklog");
 
-my $athena = AFS::PTS->new(AFS_NO_AUTH, "athena.mit.edu")
+my $athena = AFS::PTS->new(AFS_ENCRYPT, "athena.mit.edu")
   or die "Unable to authenticate to cell athena.mit.edu\n";
-my $sipb = AFS::PTS->new(AFS_REQUIRE_AUTH, "sipb.mit.edu")
+my $sipb = AFS::PTS->new(AFS_ENCRYPT, "sipb.mit.edu")
   or die "Unable to authenticate to cell sipb.mit.edu\n";
 
 my $blacklist = "/var/local/sync/moira-sync.exclude";
@@ -111,7 +112,7 @@ sub looks_like_user {
 
 my @sync;
 
-open(my $pipe, "-|", "$blanche -noauth -l sipb-afs-sync");
+open(my $pipe, "-|", "$blanche -l sipb-afs-sync");
 while(<$pipe>) {
     chomp;
     s/^LIST://;
