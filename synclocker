@@ -10,20 +10,9 @@
 # $Id$
 #
 # $Log$
-# Revision 1.1  2000/01/20 19:07:09  zacheiss
-# syncs the athena cell copy of the sipb locker with the sipb cell copy.
-#
-# Revision 1.4  1999/09/11 17:08:55  root
-# we don't want output of kdestroy, either.
-#
-# Revision 1.3  1999/09/11 17:06:54  root
-# need full paths to unlog & kdestroy; redirect output of vos release to /dev/null.
-#
-# Revision 1.2  1999/09/10 20:06:10  root
-# forgot a space in a test statement.
-#
-# Revision 1.1  1999/09/10 19:51:26  root
-# Initial revision
+# Revision 1.2  2011/12/23 19:49:27  mitchb
+# Uncommitted change from forever ago to exclude "aborted prematurely"
+# from synctree errors
 #
 #
 
@@ -57,7 +46,7 @@ vos=/usr/afs/bin/vos
 
 # do the actual work
 $synctree -q -nosrcrules -nodstrules -s $frompath -d $topath -a $frompath/.rconf 2>&1 | \
-    egrep -v 'Parsing|Fixing|chown.*failed|chown|chmod' >>$errs
+    egrep -v 'Parsing|Fixing|chown.*failed|chown|chmod|aborted prematurely' >>$errs
 
 # send mail if we've had any errors we care about
 if [ -s $errs ]; then
