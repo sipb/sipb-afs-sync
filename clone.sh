@@ -5,14 +5,8 @@
 # $Id$
 #
 # $Log$
-# Revision 1.2  2000/01/20 19:34:25  zacheiss
-# oops, let's clone volumes that don't already have backup volumes, too.
-#
-# Revision 1.1  2000/01/20 19:07:09  zacheiss
-# Initial revision
-#
-# Revision 1.1  1999/12/09 14:16:18  root
-# Initial revision
+# Revision 1.3  2011/12/23 19:42:24  mitchb
+# Uncommitted change from forever ago to use -quiet with 'vos listvldb'
 #
 #
 
@@ -33,7 +27,7 @@ KRB5CCNAME=/tmp/krb5cc_cloning; export KRB5CCNAME
 
 touch /afs/.$cell/service/DOING_CLONING
 
-volumes=`$vos listvldb -c $cell -noauth | /usr/athena/bin/perl -e 'while(<>) { chop; unless (m/^\s/ || m/^\s*$/ || m/\.nb\s*$/ || m/^disk\./ || m/^Total entries:/ || m/^n\./ ) { print $_, "\n"; } }'`
+volumes=`$vos listvldb -c $cell -quiet -noauth | /usr/athena/bin/perl -e 'while(<>) { chop; unless (m/^\s/ || m/^\s*$/ || m/\.nb\s*$/ || m/^disk\./ || m/^Total entries:/ || m/^n\./ ) { print $_, "\n"; } }'`
 
 for vol in $volumes; do
     $vos backup $vol -c $cell -localauth >/dev/null 2>>$errs
