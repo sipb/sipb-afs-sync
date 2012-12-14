@@ -10,6 +10,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.3  2012/12/14 11:28:44  mitchb
+# Stop using krb4.
+#
 # Revision 1.2  2011/12/23 19:49:27  mitchb
 # Uncommitted change from forever ago to exclude "aborted prematurely"
 # from synctree errors
@@ -18,7 +21,6 @@
 
 # define some variables it might be neat to have
 KRB5CCNAME=/tmp/krb5cc_sync
-KRBTKFILE=/tmp/tkt_sync
 
 fromcell=sipb.mit.edu
 fromdir=project/sipb
@@ -41,7 +43,7 @@ synctree=/usr/athena/etc/synctree
 vos=/usr/afs/bin/vos
 
 # get tickets and authenticate to both cells
-/usr/athena/bin/kinit -k
+/usr/athena/bin/kinit -5 -k
 /bin/athena/aklog $tocell $fromcell
 
 # do the actual work

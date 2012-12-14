@@ -23,10 +23,9 @@ use constant AFS_OPTIONAL_AUTH => 1;
 use constant AFS_REQUIRE_AUTH  => 2;
 use constant AFS_ENCRYPT       => 3;
 
-$ENV{KRBTKFILE} = "/tmp/tkt_moirasync";
 $ENV{KRB5CCNAME} = "/tmp/krb5cc_moirasync";
 
-system("/usr/athena/bin/kinit -k") == 0
+system("/usr/athena/bin/kinit -5 -k") == 0
   or die("Unable to kinit");
 system("/bin/athena/aklog athena.mit.edu sipb.mit.edu") == 0
   or die("Unable to aklog");
