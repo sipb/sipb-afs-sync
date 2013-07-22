@@ -8,22 +8,25 @@
 # $Id$
 #
 # $Log$
+# Revision 1.2  2013/07/22 00:38:21  kaduk
+# First crack at updating for a debian reynelda
+#
 # Revision 1.1  2000/01/20 19:07:09  zacheiss
-# script which automatically releases replicated volumes in the sipb cell nightly.
+# Initial revision
 #
 # Revision 1.1  1999/08/10 07:00:06  root
 # Initial revision
 #
 #
 
-vos=/usr/afs/bin/vos
+vos=/usr/bin/vos
 cell=sipb.mit.edu
 errs=/tmp/release.errs.$$
 header=/tmp/release.hdr.$$
 mailto=sipb-afsreq@mit.edu
 mailrepl=sipb-afsreq@mit.edu
 host=`/bin/hostname`
-excludefile=/var/local/sync/release.excludes
+excludefile=/var/lib/openafs/sync/release.excludes
 
 # Build up a egrep regular expression from the excludes file
 
@@ -45,7 +48,7 @@ Subject: $cell cell volume release errors
 
 EOF
 
-    (cat $header; cat $errs) | /usr/lib/sendmail -t -f${mailrepl}
+    (cat $header; cat $errs) | /usr/sbin/sendmail -t -f${mailrepl}
 else 
     rm -f $errs
 fi
