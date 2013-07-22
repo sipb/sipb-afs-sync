@@ -10,6 +10,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.7  2013/07/22 04:17:53  kaduk
+# Attempt to appease the rsync gods with carefully placed slashes
+#
 # Revision 1.6  2013/07/22 03:25:06  kaduk
 # rsync appears to actually respect it's "quiet" argument; skip the
 # egrep step of the pipeline.
@@ -33,7 +36,7 @@
 KRB5CCNAME=/tmp/krb5cc_sync
 
 fromcell=sipb.mit.edu
-fromdir=project/sipb
+fromdir=project/sipb/
 frompath=/afs/.${fromcell}/${fromdir}
 fromvol=`echo $fromdir | sed -e 's/\//\./'`
 
