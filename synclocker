@@ -10,6 +10,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.4  2013/07/22 03:13:26  kaduk
+# First crack at synclocker for a debian reynelda
+#
 # Revision 1.3  2012/12/14 11:28:44  mitchb
 # Stop using krb4.
 #
@@ -38,16 +41,16 @@ host=`/bin/hostname`
 mailto=sipb-afsreq@mit.edu
 mailrepl=sipb-afsreq@mit.edu
 
-synctree=/usr/athena/etc/synctree
+synctree=/usr/bin/rsync
 
-vos=/usr/afs/bin/vos
+vos=/usr/bin/vos
 
 # get tickets and authenticate to both cells
-/usr/athena/bin/kinit -5 -k
-/bin/athena/aklog $tocell $fromcell
+/usr/bin/kinit -5 -k host/reynelda.mit.edu
+/usr/bin/aklog $tocell $fromcell
 
 # do the actual work
-$synctree -q -nosrcrules -nodstrules -s $frompath -d $topath -a $frompath/.rconf 2>&1 | \
+$synctree -qpf --exclude-from=$frompath/.ignore --delete $frompath $topath 2>&1 | \
     egrep -v 'Parsing|Fixing|chown.*failed|chown|chmod|aborted prematurely' >>$errs
 
 # send mail if we've had any errors we care about
@@ -69,8 +72,8 @@ fi
 $vos release $fromvol -cell $fromcell -localauth >/dev/null 2>&1
 
 #clean up
-/bin/athena/unlog $fromcell $tocell
-/usr/athena/bin/kdestroy >/dev/null 2>&1
+/usr/bin/unlog $fromcell $tocell
+/usr/bin/kdestroy >/dev/null 2>&1
  
 exit 0
 
