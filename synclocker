@@ -10,6 +10,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.5  2013/07/22 03:21:07  kaduk
+# More better rsync flags
+#
 # Revision 1.4  2013/07/22 03:13:26  kaduk
 # First crack at synclocker for a debian reynelda
 #
@@ -50,7 +53,7 @@ vos=/usr/bin/vos
 /usr/bin/aklog $tocell $fromcell
 
 # do the actual work
-$synctree -qpf --exclude-from=$frompath/.ignore --delete $frompath $topath 2>&1 | \
+$synctree -qWrp --exclude-from=$frompath/.ignore --delete $frompath $topath 2>&1 | \
     egrep -v 'Parsing|Fixing|chown.*failed|chown|chmod|aborted prematurely' >>$errs
 
 # send mail if we've had any errors we care about
