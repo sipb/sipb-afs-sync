@@ -22,7 +22,7 @@ use constant AFS_NO_AUTH       => 0;
 use constant AFS_OPTIONAL_AUTH => 1;
 use constant AFS_REQUIRE_AUTH  => 2;
 use constant AFS_ENCRYPT       => 3;
-use constant KERBEROS_PRINCIPAL => "host/reynelda.mit.edu\@ATHENA.MIT.EDU"
+use constant KERBEROS_PRINCIPAL => "host/reynelda.mit.edu\@ATHENA.MIT.EDU";
 
 $ENV{KRB5CCNAME} = "/tmp/krb5cc_moirasync";
 
