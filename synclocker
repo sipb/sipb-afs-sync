@@ -10,6 +10,11 @@
 # $Id$
 #
 # $Log$
+# Revision 1.8  2013/10/25 19:48:37  kaduk
+# Just set fromvol directly, don't bother with a funky sed-in-backticks.
+# This fixes the release to the RO copies in the SIPB cell, which has
+# been broken for some months.
+#
 # Revision 1.7  2013/07/22 04:17:53  kaduk
 # Attempt to appease the rsync gods with carefully placed slashes
 #
@@ -38,7 +43,7 @@ KRB5CCNAME=/tmp/krb5cc_sync
 fromcell=sipb.mit.edu
 fromdir=project/sipb/
 frompath=/afs/.${fromcell}/${fromdir}
-fromvol=`echo $fromdir | sed -e 's/\//\./'`
+fromvol=project.sipb
 
 tocell=athena.mit.edu
 todir=contrib/sipb
