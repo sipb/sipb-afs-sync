@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.5  2013/07/22 00:31:36  kaduk
+# First crack at updating for a debian reynelda
+#
 # Revision 1.4  2012/12/14 11:26:03  mitchb
 # Stop using krb4.
 #
@@ -13,7 +16,7 @@
 #
 #
 
-vos=/usr/afs/bin/vos
+vos=/usr/bin/vos
 cell=sipb.mit.edu
 errs=/tmp/clone.errs.$$
 header=/tmp/clone.hdr.$$
@@ -22,10 +25,10 @@ mailrepl=sipb-afsreq@mit.edu
 host=`/bin/hostname`
 KRB5CCNAME=/tmp/krb5cc_cloning; export KRB5CCNAME
 
-/usr/athena/bin/kinit -5 -k
-/bin/athena/aklog $cell
+/usr/bin/kinit -k host/reynelda.mit.edu@ATHENA.MIT.EDU
+/usr/bin/aklog $cell
 
-/usr/local/bin/zwrite -q -c sipb-auto -i backups -s reynelda -O auto -m "Beginning automated cloning."
+/usr/bin/zwrite -q -c sipb-auto -i backups -s reynelda -O auto -m "Beginning automated cloning."
 
 touch /afs/.$cell/service/DOING_CLONING
 
@@ -45,16 +48,16 @@ Subject: $cell cell nightly cloning errors
 
 EOF
 
-    (cat $header; cat $errs) | /usr/lib/sendmail -t -f${mailrepl}
+    (cat $header; cat $errs) | /usr/sbin/sendmail -t -f${mailrepl}
 else
     rm -f $errs
 fi
 
 rm -f /afs/.$cell/service/DOING_CLONING
 
-/usr/local/bin/zwrite -q -c sipb-auto -i backups -s reynelda -O auto -m "Done with automated cloning."
+/usr/bin/zwrite -q -c sipb-auto -i backups -s reynelda -O auto -m "Done with automated cloning."
 
-/usr/athena/bin/kdestroy >/dev/null 2>&1
-/bin/athena/unlog $cell
+/usr/bin/kdestroy >/dev/null 2>&1
+/usr/bin/unlog $cell
 
 exit 0
